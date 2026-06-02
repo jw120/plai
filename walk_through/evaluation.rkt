@@ -45,3 +45,14 @@
   (test (calc (plus (num 1) (plus (num 2) (num 4)))) 7)
   (test (calc (plus (num 1) (plus (plus (num 2) (num 3))(num 4)))) 10)
   (test (calc (plus (num 0.1) (num 0.2))) 0.3))
+
+(define (run [s : S-Exp]) : Number
+  (calc (parse s)))
+
+(module+ test
+  (test (run `1) 1)
+  (test (run `2.3) 2.3)
+  (test (run `{+ 1 2}) 3)
+  (test (run `{+ {+ 1 2} 3}) 6)
+  (test (run `{+ 1 {+ 2 3}}) 6)
+  (test (run `{+ 1 {+ {+ 2 3} 4}}) 10))
