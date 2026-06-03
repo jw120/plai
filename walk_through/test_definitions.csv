@@ -1,0 +1,44 @@
+# Common definitions for unit tests.
+#
+# Processed my mk_tests to create language specific test files
+#
+# Format is:
+#
+# test-command,input,output
+#
+# where each is in plait style and a string output is for an expected excption
+#
+# Blank lines and lines beginnning with # are ignored as comments
+
+# Parse tests
+parse,`1,(numE 1)
+parse,`{+ 1 2},(plusE (numE 1) (numE 2))
+parse,`{+ 1 {+ {+ 2 3} 4}}, (plusE (numE 1) (plusE (plusE (numE 2) (numE 3))(numE 4)))
+parse,`#f,(boolE #f)
+parse,`#t,(boolE #t)
+parse,`#false,(boolE #f)
+parse,`#true,(boolE #t)
+parse,`z,"cannot parse,a symbol"
+parse,`{- 3 2},"unrecognized symbol"
+parse,`{1 + 2},"unrecognized form"
+
+# Calc tests
+calc,(numE 1),(numV 1)
+calc,(numE 2.3),(numV 2.3)
+calc,(plusE (numE 1,(numE 2))) (numV 3)
+calc,(plusE (plusE (numE 1) (numE 2)) (numE 3)),(numV 6)
+calc,(plusE (numE 1) (plusE (numE 2) (numE 4))),(numV 7)
+calc,(plusE (numE 1) (plusE (plusE (numE 2) (numE 3))(numE 4))),(numV 10)
+calc,(plusE (numE 1) (boolE #t)),"right hand side"
+calc,(plusE (boolE #f) (boolE #t))."left hand side"
+calc,(cndE (boolE #f) (numE 2) (numE 3)),(numV 3)
+calc,(cndE (boolE #t) (numE 2) (numE 3)),(numV 2)
+calc,(cndE (numE 2) (numE 2) (numE 3)),"boolean"
+
+# Run tests
+run,`1,(numV 1)
+run,`2.3,(numV 2.3)
+run,`{+ 1 2},(numV 3)
+run,`{+ {+ 1 2} 3},(numV 6)
+run,`{+ 1 {+ 2 3}},(numV 6)
+run,`{+ 1 {+ {+ 2 3} 4}},(numV 10)
