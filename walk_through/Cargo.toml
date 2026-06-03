@@ -1,0 +1,33 @@
+[package]
+name = "walk_through"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.102"
+lexopt = "0.3.2"
+
+[[bin]]
+  name = "make_tests"
+  path = "make_tests.rs"
+
+
+
+[lints.rust]
+missing_crate_level_docs = "warn"
+# missing_docs = "warn"
+
+[lints.rustdoc]
+unescaped_backticks = "warn"
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+many-single-char-names = "allow"
+missing_errors_doc = "allow"
+too_many_lines = "allow"
+# Below are from the "restrictions" category (cargo clippy -- --warn clippy::restriction)
+#arbitrary_source_item_ordering = "warn" (maybe useful if used from start of project)
+map_with_unused_argument_over_ranges = "warn"
+shadow_unrelated = "warn"
+string_add_assign = "warn"
+str_to_string = "warn"

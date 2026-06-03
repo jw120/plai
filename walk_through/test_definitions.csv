@@ -18,7 +18,7 @@ parse,`#f,(boolE #f)
 parse,`#t,(boolE #t)
 parse,`#false,(boolE #f)
 parse,`#true,(boolE #t)
-parse,`z,"cannot parse,a symbol"
+parse,`z,"cannot parse a symbol"
 parse,`{- 3 2},"unrecognized symbol"
 parse,`{1 + 2},"unrecognized form"
 
@@ -30,7 +30,7 @@ calc,(plusE (plusE (numE 1) (numE 2)) (numE 3)),(numV 6)
 calc,(plusE (numE 1) (plusE (numE 2) (numE 4))),(numV 7)
 calc,(plusE (numE 1) (plusE (plusE (numE 2) (numE 3))(numE 4))),(numV 10)
 calc,(plusE (numE 1) (boolE #t)),"right hand side"
-calc,(plusE (boolE #f) (boolE #t))."left hand side"
+calc,(plusE (boolE #f) (boolE #t)),"left hand side"
 calc,(cndE (boolE #f) (numE 2) (numE 3)),(numV 3)
 calc,(cndE (boolE #t) (numE 2) (numE 3)),(numV 2)
 calc,(cndE (numE 2) (numE 2) (numE 3)),"boolean"
