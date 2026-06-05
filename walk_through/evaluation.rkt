@@ -15,7 +15,10 @@
             [x (second l)]
             [y (third l)])
        (cond
-         [(symbol=? f '+) (plusE (parse x) (parse y))]
+         [(symbol=? f '+) (addE (parse x) (parse y))]
+         [(symbol=? f '-) (subE (parse x) (parse y))]
+         [(symbol=? f '*) (mulE (parse x) (parse y))]
+         [(symbol=? f '/) (divE (parse x) (parse y))]
          [else (error 'parse "unrecognized symbol applied")]))]
     [else (error 'parse "unrecognized form in s-expression")]))
 
@@ -26,7 +29,10 @@
 (define-type Exp
   [numE (n : Number)]
   [boolE (b : Boolean)]
-  [plusE (left : Exp) (right : Exp)]
+  [addE (left : Exp) (right : Exp)]
+  [subE (left : Exp) (right : Exp)]
+  [mulE (left : Exp) (right : Exp)]
+  [divE (left : Exp) (right : Exp)]
   [cndE (test : Exp) (then : Exp) (else : Exp)])
 
 ;;
@@ -45,23 +51,34 @@
   (type-case Exp e
              [(numE n) (numV n)]
              [(boolE b) (boolV b)]
-             [(plusE l r) (add (calc l) (calc r))]
+             [(addE l r) (binary-numeric + '+ (calc l) (calc r))]
+             [(subE l r) (binary-numeric - '- (calc l) (calc r))]
+             [(mulE l r) (binary-numeric * '* (calc l) (calc r))]
+             [(divE l r) (binary-numeric divide '/ (calc l) (calc r))]
              [(cndE c t e) (if (boolean-decision (calc c))
                                (calc t)
                                (calc e))]))
+
+;; Apply a binary function to two values which must be numbers
+(define (binary-numeric [f : (Number Number -> Number)] [symbol : Symbol] [v1 : Value] [v2 : Value]) : Value
+  (type-case Value v1
+             [(numV n1)
+              (type-case Value v2
+                         [(numV n2) (numV (f n1 n2))]
+                         [else (error symbol "expects right hand side to be a number")])]
+             [else (error symbol "expects left hand side to be a be a number")]))
+
+(define (divide [n1 : Number] [n2 : Number]) : Number
+  (if (zero? n2)
+      (error '/ "division by zero")
+      (floor (/ n1 n2))))
 
 (define (boolean-decision [v : Value]) : Boolean
   (type-case Value v
              [(boolV b) b]
              [else (error 'if "expects conditional to evaluate to a boolean")]))
 
-(define (add [v1 : Value] [v2 : Value]) : Value
-  (type-case Value v1
-             [(numV n1)
-              (type-case Value v2
-                         [(numV n2) (numV (+ n1 n2))]
-                         [else (error '+ "expects right hand side to be a number")])]
-             [else (error '+ "expects left hand side to be a be a number")]))
+
 
 
 ;;
