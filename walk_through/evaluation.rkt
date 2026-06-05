@@ -33,7 +33,9 @@
   [subE (left : Exp) (right : Exp)]
   [mulE (left : Exp) (right : Exp)]
   [divE (left : Exp) (right : Exp)]
-  [cndE (test : Exp) (then : Exp) (else : Exp)])
+  [cndE (test : Exp) (then : Exp) (else : Exp)]
+  [varE (name : Symbol)]
+  [let1E (var : Symbol) (value : Exp) (body : Exp)])
 
 ;;
 ;; Value
@@ -44,20 +46,37 @@
   [boolV (the-boolean : Boolean)])
 
 ;;
-;; Calculate
+;; Interpret
 ;;
 
-(define (calc [e : Exp]) : Value 
+(define-type-alias Env (Hashof Symbol Value))
+
+;; Interpret from an empty environment
+(define (calc [e : Exp]) : Value
+  (interp e (hash empty)))
+
+(define (interp [e : Exp] [nv : Env]) : Value 
   (type-case Exp e
              [(numE n) (numV n)]
              [(boolE b) (boolV b)]
-             [(addE l r) (binary-numeric + '+ (calc l) (calc r))]
-             [(subE l r) (binary-numeric - '- (calc l) (calc r))]
-             [(mulE l r) (binary-numeric * '* (calc l) (calc r))]
-             [(divE l r) (binary-numeric divide '/ (calc l) (calc r))]
-             [(cndE c t e) (if (boolean-decision (calc c))
-                               (calc t)
-                               (calc e))]))
+             [(addE l r) (binary-numeric + '+ (interp l nv) (interp r nv))]
+             [(subE l r) (binary-numeric - '- (interp l nv) (interp r nv))]
+             [(mulE l r) (binary-numeric * '* (interp l nv) (interp r nv))]
+             [(divE l r) (binary-numeric divide '/ (interp l nv) (interp r nv))]
+             [(cndE c t e) (if (as-boolean (interp c nv))
+                               (interp t nv)
+                               (interp e nv))]
+             [(varE s) (lookup s nv)]
+             [(let1E var val body)
+              (let ([new-env (hash-set nv var (interp val nv))])
+                (interp body new-env))]))
+
+;; Lookup symbol in environment, error if not found
+(define (lookup [s : Symbol] [nv : Env]) : Value
+  (type-case (Optionof Value) (hash-ref nv s)
+             [(none) (error s "not bound")]
+             [(some v) v]))
+
 
 ;; Apply a binary function to two values which must be numbers
 (define (binary-numeric [f : (Number Number -> Number)] [symbol : Symbol] [v1 : Value] [v2 : Value]) : Value
@@ -68,17 +87,17 @@
                          [else (error symbol "expects right hand side to be a number")])]
              [else (error symbol "expects left hand side to be a be a number")]))
 
+;; Integer division catching division by zero
 (define (divide [n1 : Number] [n2 : Number]) : Number
   (if (zero? n2)
       (error '/ "division by zero")
       (floor (/ n1 n2))))
 
-(define (boolean-decision [v : Value]) : Boolean
+;; Return value if its a boolean, otherwise error
+(define (as-boolean [v : Value]) : Boolean
   (type-case Value v
              [(boolV b) b]
              [else (error 'if "expects conditional to evaluate to a boolean")]))
-
-
 
 
 ;;

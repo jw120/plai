@@ -28,7 +28,7 @@ parse,`{- 1 {* {/ 2 3} 4}},(subE (numE 1) (mulE (divE (numE 2) (numE 3)) (numE 4
 parse,`{! 3 2},"unrecognized symbol"
 parse,`{1 + 2},"unrecognized form"
 
-# Calc tests
+# Interpreting tests
 calc,(numE 1),(numV 1)
 calc,(numE -34),(numV -34)
 calc,(boolE #t),(boolV #t)
