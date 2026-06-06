@@ -16,18 +16,26 @@ enum SExp {
 type Symbol = String;
 
 fn read_sexp(s: &str) -> Result<(SExp, &str)> {
+    println!("read_sexp '{s}'");
     let s = s.trim_start();
-    let Some(first_char) = s.chars().next() else {
+    let mut chars = s.chars();
+    let Some(first_char) = chars.next() else {
         bail!("Empty string in read");
     };
-    if first_char.is_ascii_digit() || first_char == '-' {
+    if first_char.is_ascii_digit() {
         read_number(s)
+    } else if first_char == '-' {
+        if let Some(second_char) = chars.next() && second_char.is_ascii_digit() {
+            read_number(s)
+        } else {
+            read_symbol(s)
+        }
     } else if first_char == '#' {
         read_boolean(s)
-    } else if first_char.is_ascii_alphabetic() {
-        read_symbol(s)
     } else if first_char == '{' {
         read_list(s)
+    } else if is_symbol_char(first_char) {
+        read_symbol(s)
     } else {
         Err(anyhow!("Unrecognized string to read: '{s}'"))
     }
@@ -58,7 +66,7 @@ fn read_number(s: &str) -> Result<(SExp, &str)> {
 }
 
 fn read_symbol(s: &str) -> Result<(SExp, &str)> {
-    match s.char_indices().find(|(_, c)| !c.is_ascii_alphabetic()) {
+    match s.char_indices().find(|(_, c)| !is_symbol_char(*c)) {
         Some((0, _)) => Err(anyhow!("Internal error - expected symbol at '{s}'")),
         Some((r, _)) => Ok((SExp::Symbol(s[..r].to_string()), &s[r..])),
         None => Ok((SExp::Symbol(s.to_owned()), "")),
@@ -66,12 +74,14 @@ fn read_symbol(s: &str) -> Result<(SExp, &str)> {
 }
 
 fn read_list(s: &str) -> Result<(SExp, &str)> {
+    println!("read_list '{s}'");
     let Some(without_brace) = s.strip_prefix('{') else {
         bail!("Internal error - no brace in read_list");
     };
     let mut items: Vec<SExp> = Vec::new();
     let mut remaining = without_brace;
     loop {
+        println!("  loop '{remaining}' {items:?}");
         remaining = remaining.trim_start();
         if remaining.is_empty() {
             bail!("Unterminated list");
@@ -87,6 +97,10 @@ fn read_list(s: &str) -> Result<(SExp, &str)> {
 
 fn is_not_numeric((i, c): &(usize, char)) -> bool {
     !(c.is_ascii_digit() || (*i == 0 && *c == '-'))
+}
+
+fn is_symbol_char(c: char) -> bool {
+    c.is_ascii_alphabetic() || c == '+' || c == '-' || c == '*' || c == '/'
 }
 
 // Expressions
@@ -110,8 +124,8 @@ impl Exp {
     fn show_plait(&self) -> String {
         match self {
             Self::Number(i) => format!("(numE {i})"),
-            Self::Boolean(true) => "(boolE #t)".to_string(),
-            Self::Boolean(false) => "(boolE #f)".to_string(),
+            Self::Boolean(true) => "(boolE #t)".to_owned(),
+            Self::Boolean(false) => "(boolE #f)".to_owned(),
             Self::Variable(s) => format!("(varE '{s})"),
             Self::Cond(c, a, b) => format!(
                 "(cndE {} {} {})",
@@ -129,6 +143,7 @@ impl Exp {
 }
 
 fn parse_sexp(sexp: &SExp) -> Result<Exp> {
+    println!("parse_sexp {sexp:?}");
     match sexp {
         SExp::Number(n) => return Ok(Exp::Number(*n)),
         SExp::Boolean(b) => return Ok(Exp::Boolean(*b)),
@@ -143,22 +158,22 @@ fn parse_sexp(sexp: &SExp) -> Result<Exp> {
                     ));
                 }
             }
-            [SExp::Symbol(f), SExp::Symbol(v), b] => {
-                if f == "lam" {
-                    return Ok(Exp::Lambda(v.clone(), Box::new(parse_sexp(b)?)));
-                }
-            }
             [SExp::Symbol(f), a, b] => match f.as_str() {
                 "+" => return Ok(Exp::Add(Box::new(parse_sexp(a)?), Box::new(parse_sexp(b)?))),
                 "-" => return Ok(Exp::Sub(Box::new(parse_sexp(a)?), Box::new(parse_sexp(b)?))),
                 "*" => return Ok(Exp::Mul(Box::new(parse_sexp(a)?), Box::new(parse_sexp(b)?))),
                 "/" => return Ok(Exp::Div(Box::new(parse_sexp(a)?), Box::new(parse_sexp(b)?))),
-                _ => return Err(anyhow!("unrecognized symbol in binary function")),
+                "lam" => if let SExp::Symbol(variable) = a {
+                    return Ok(Exp::Lambda(variable.clone(), Box::new(parse_sexp(b)?)))
+                } else {
+                    return Err(anyhow!("unrecognized lam form in list"))
+                }
+                _ => return Err(anyhow!("unrecognized symbol in list")),
             },
             _ => {}
         },
     }
-    Err(anyhow!("Unrecognized form in s-expression"))
+    Err(anyhow!("Unrecognized form in s-expression: {sexp:?}"))
 }
 
 /// Parse from string to an expression and convert to plait-style
@@ -195,7 +210,7 @@ mod tests {
     }
 
     #[test]
-    fn test_read_variable() {
+    fn test_read_symbol() {
         assert_eq!(
             read_symbol("x").unwrap(),
             (SExp::Symbol("x".to_string()), "")
@@ -225,5 +240,41 @@ mod tests {
             read_sexp(" z)").unwrap(),
             (SExp::Symbol("z".to_string()), ")")
         );
+        assert_eq!(read_sexp("-").unwrap(), (SExp::Symbol("-".to_string()), ""));
+        assert_eq!(read_sexp("-2").unwrap(), (SExp::Number(-2), ""));
+    }
+
+    #[test]
+    fn test_parse_binary_mul() {
+        let (sexp, rest) = read_sexp("{* 2 3}").unwrap();
+        assert!(rest.is_empty());
+        assert_eq!(sexp, SExp::List(vec![SExp::Symbol("*".to_string()), SExp::Number(2), SExp::Number(3)]));
+        let exp = parse_sexp(&sexp).unwrap();
+        assert_eq!(exp, Exp::Mul(Box::new(Exp::Number(2)), Box::new(Exp::Number(3))));
+    }
+
+    #[test]
+    fn test_parse_binary_add() {
+        let (sexp, rest) = read_sexp("{+ 22 33}").unwrap();
+        assert!(rest.is_empty());
+        assert_eq!(sexp, SExp::List(vec![SExp::Symbol("+".to_string()), SExp::Number(22), SExp::Number(33)]));
+        let exp = parse_sexp(&sexp).unwrap();
+        assert_eq!(exp, Exp::Add(Box::new(Exp::Number(22)), Box::new(Exp::Number(33))));
+    }
+
+    #[test]
+    fn test_parse_if() {
+        let (sexp, rest) = read_sexp("{if x 2 {+ y 4}}").unwrap();
+        assert!(rest.is_empty());
+        assert_eq!(sexp, SExp::List(vec![
+            SExp::Symbol("if".to_string()),
+            SExp::Symbol("x".to_string()),
+            SExp::Number(2),
+            SExp::List(vec![SExp::Symbol("+".to_string()), SExp::Symbol("y".to_string()), SExp::Number(4)])]));
+        let exp = parse_sexp(&sexp).unwrap();
+        assert_eq!(exp, Exp::Cond(
+            Box::new(Exp::Variable("x".to_string())),
+            Box::new(Exp::Number(2)),
+            Box::new(Exp::Add(Box::new(Exp::Variable("y".to_string())), Box::new(Exp::Number(4))))));
     }
 }

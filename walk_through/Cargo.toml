@@ -18,12 +18,9 @@ path = "evaluation.rs"
   name = "evaluation_test"
   path = "evaluation_test.rs"
 
-[lints.rust]
-missing_crate_level_docs = "warn"
-# missing_docs = "warn"
-
 [lints.rustdoc]
 unescaped_backticks = "warn"
+missing_crate_level_docs = "warn"
 
 [lints.clippy]
 pedantic = { level = "warn", priority = -1 }

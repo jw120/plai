@@ -66,15 +66,15 @@ fn header(language: Language) -> Result<&'static str> {
                               #[test]\n\
                               fn test_all() {\n"),
                               
-        _ => Err(anyhow!("NYI")),
+        Language::Python => Err(anyhow!("NYI")),
     }
 }
 
 fn footer(language: Language) -> Result<&'static str> {
     match language {
         Language::Plait => Ok(""),
-        Language::Rust => Ok("    }\n}\n"),
-        _ => Err(anyhow!("NYI")),
+        Language::Rust => Ok("    }\n}\nfn main() { }\n"),
+        Language::Python => Err(anyhow!("NYI")),
     }
 }
 
@@ -120,7 +120,7 @@ fn data_lines(language: Language, input: &File, output: &mut File) -> Result<()>
         let output_line = match language {
             Language::Plait => line_plait(parts[0], parts[1], parts[2]),
             Language::Rust => line_rust(parts[0], parts[1], parts[2]),
-            _ => bail!("NYI"),
+            Language::Python => bail!("NYI"),
         };
         output.write_all(output_line.as_bytes())?;
     }

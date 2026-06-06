@@ -24,9 +24,9 @@ parse,#false,(boolE #f)
 parse,#true,(boolE #t)
 # Special forms
 #parse,{let1 {x 3} {* 2 x}},(let1E 'x (numE 3) (mulE (numE 2) (varE 'x)))
-#parse,{lam y {+ y 4}},(lamE 'y (addE (varE 'y) (numE 4)))
+parse,{lam y {+ y 4}},(lamE 'y (addE (varE 'y) (numE 4)))
 #parse,{let1 {x 3} {let1 {y 2} {+ x y}}},(let1E 'x (numE 3) (let1E 'y (numE 2) (addE (varE 'x) (varE 'y))))
-#parse,{if x {+ y 3} {- y 4}},(cndE (varE 'x) (addE (varE 'y) (numE 3)) (subE (varE 'y) (numE 4)))
+parse,{if x {+ y 3} {- y 4}},(cndE (varE 'x) (addE (varE 'y) (numE 3)) (subE (varE 'y) (numE 4)))
 # Special forms - book examples
 #parse,{let1 {f {lam x {+ x x}}} {f 3}},(let1E 'f (lamE 'x (addE (varE 'x) (varE 'x))) (appE (varE 'f) (numE 3)))
 #parse,{let1 {x 3} {let1 {f {lam y {+ x y}}} {f 3}}},(let1E 'x (numE 3) (let1E 'f (lamE 'y (addE (varE 'x) (varE 'y))) (appE (varE 'f) (numE 3))))
