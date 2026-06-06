@@ -7,13 +7,16 @@ edition = "2024"
 anyhow = "1.0.102"
 lexopt = "0.3.2"
 
+[lib]
+path = "evaluation.rs"
+
 [[bin]]
   name = "make_tests"
   path = "make_tests.rs"
 
 [[bin]]
-  name = "evaluation"
-  path = "evaluation.rs"
+  name = "evaluation_test"
+  path = "evaluation_test.rs"
 
 [lints.rust]
 missing_crate_level_docs = "warn"

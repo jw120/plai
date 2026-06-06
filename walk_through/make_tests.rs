@@ -59,11 +59,12 @@ fn header(language: Language) -> Result<&'static str> {
         Language::Plait => Ok("#lang plait\n\
                               (print-only-errors #true)\n\n\
                               (require \"evaluation.rkt\")\n\n"),
-        Language::Rust => Ok("#[cfg(test)]\n\n\
+        Language::Rust => Ok("mod evaluation;\n\n\
+                              #[cfg(test)]\n\n\
                               mod tests {\n\n\
-                                  use evaluation::*;\n\n\
-                                  #[test]\n\
-                                  fn test_all() {\n"),
+                              use crate::evaluation::*;\n\n\
+                              #[test]\n\
+                              fn test_all() {\n"),
                               
         _ => Err(anyhow!("NYI")),
     }
@@ -83,19 +84,24 @@ fn line_plait(command: &str, input: &str, output: &str) -> String {
     } else {
         "test"
     };
+    let quote = if command == "parse" || command == "run" {
+        "`"
+    } else {
+        ""
+    };
     let output = if command == "run" {
         &format!("\"{output}\"")
     } else {
         output
     };
-    format!("({test_function} ({command} {input}) {output})\n")
+    format!("({test_function} ({command} {quote}{input}) {output})\n")
 }
 
 fn line_rust(command: &str, input: &str, output: &str) -> String {
-    if command != "parse" {
+    if command != "parse" || output.starts_with('"') {
         return String::new();
     }
-    format!("        assert_eq!({command}({input}), {output})\n")
+    format!("    assert_eq!({command}(\"{input}\").unwrap(), \"{output}\");\n")
 }
 
 

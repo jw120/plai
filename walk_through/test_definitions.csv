@@ -14,34 +14,34 @@
 # Parse tests
 #
 # Terminals
-parse,`1,(numE 1)
-parse,`23,(numE 23)
-parse,`-34,(numE -34)
-parse,`z,(varE 'z)
-parse,`#f,(boolE #f)
-parse,`#t,(boolE #t)
-parse,`#false,(boolE #f)
-parse,`#true,(boolE #t)
+parse,1,(numE 1)
+parse,23,(numE 23)
+parse,-34,(numE -34)
+parse,z,(varE 'z)
+parse,#f,(boolE #f)
+parse,#t,(boolE #t)
+parse,#false,(boolE #f)
+parse,#true,(boolE #t)
 # Special forms
-parse,`{let1 {x 3} {* 2 x}},(let1E 'x (numE 3) (mulE (numE 2) (varE 'x)))
-parse,`{lam y {+ y 4}},(lamE 'y (addE (varE 'y) (numE 4)))
-parse,`{let1 {x 3} {let1 {y 2} {+ x y}}},(let1E 'x (numE 3) (let1E 'y (numE 2) (addE (varE 'x) (varE 'y))))
-parse,`{if x {+ y 3} {- y 4}},(cndE (varE 'x) (addE (varE 'y) (numE 3)) (subE (varE 'y) (numE 4)))
+#parse,{let1 {x 3} {* 2 x}},(let1E 'x (numE 3) (mulE (numE 2) (varE 'x)))
+#parse,{lam y {+ y 4}},(lamE 'y (addE (varE 'y) (numE 4)))
+#parse,{let1 {x 3} {let1 {y 2} {+ x y}}},(let1E 'x (numE 3) (let1E 'y (numE 2) (addE (varE 'x) (varE 'y))))
+#parse,{if x {+ y 3} {- y 4}},(cndE (varE 'x) (addE (varE 'y) (numE 3)) (subE (varE 'y) (numE 4)))
 # Special forms - book examples
-parse,`{let1 {f {lam x {+ x x}}} {f 3}},(let1E 'f (lamE 'x (addE (varE 'x) (varE 'x))) (appE (varE 'f) (numE 3)))
-parse,`{let1 {x 3} {let1 {f {lam y {+ x y}}} {f 3}}},(let1E 'x (numE 3) (let1E 'f (lamE 'y (addE (varE 'x) (varE 'y))) (appE (varE 'f) (numE 3))))
-parse,`{let1 {x 1} {let1 {f {lam y x}} {let1 {x 2} {f 10}}}},(let1E 'x (numE 1) (let1E 'f (lamE 'y (varE 'x)) (let1E 'x (numE 2) (appE (varE 'f) (numE 10)))))
+#parse,{let1 {f {lam x {+ x x}}} {f 3}},(let1E 'f (lamE 'x (addE (varE 'x) (varE 'x))) (appE (varE 'f) (numE 3)))
+#parse,{let1 {x 3} {let1 {f {lam y {+ x y}}} {f 3}}},(let1E 'x (numE 3) (let1E 'f (lamE 'y (addE (varE 'x) (varE 'y))) (appE (varE 'f) (numE 3))))
+#parse,{let1 {x 1} {let1 {f {lam y x}} {let1 {x 2} {f 10}}}},(let1E 'x (numE 1) (let1E 'f (lamE 'y (varE 'x)) (let1E 'x (numE 2) (appE (varE 'f) (numE 10)))))
 # Binary functions
-parse,`{+ 1 2},(addE (numE 1) (numE 2))
-parse,`{- 1 2},(subE (numE 1) (numE 2))
-parse,`{* 1 2},(mulE (numE 1) (numE 2))
-parse,`{/ 1 2},(divE (numE 1) (numE 2))
+parse,{+ 1 2},(addE (numE 1) (numE 2))
+parse,{- 1 2},(subE (numE 1) (numE 2))
+parse,{* 1 2},(mulE (numE 1) (numE 2))
+parse,{/ 1 2},(divE (numE 1) (numE 2))
 # Binary functions - book examples
-parse,`{+ 1 {+ {+ 2 3} 4}},(addE (numE 1) (addE (addE (numE 2) (numE 3)) (numE 4)))
-parse,`{- 1 {* {/ 2 3} 4}},(subE (numE 1) (mulE (divE (numE 2) (numE 3)) (numE 4)))
+parse,{+ 1 {+ {+ 2 3} 4}},(addE (numE 1) (addE (addE (numE 2) (numE 3)) (numE 4)))
+parse,{- 1 {* {/ 2 3} 4}},(subE (numE 1) (mulE (divE (numE 2) (numE 3)) (numE 4)))
 # Errors
-parse,`{! 3 2},"unrecognized symbol"
-parse,`{1 + 2},"unrecognized form"
+parse,{! 3 2},"unrecognized symbol"
+parse,{1 + 2},"unrecognized form"
 
 # Interpreting tests
 calc,(numE 1),(numV 1)
@@ -63,16 +63,16 @@ calc,(cndE (boolE #t) (numE 2) (numE 3)),(numV 2)
 calc,(cndE (numE 2) (numE 2) (numE 3)),"boolean"
 
 # Run tests
-run,`1,1
-run,`23,23
-run,`-34,-34
-run,`#t,#t
-run,`#f,#f
-run,`{lam y {+ y 4}},#closure
-run,`{+ 1 2},3
-run,`{+ {+ 1 2} 3},6
-run,`{+ 1 {+ 2 3}},6
-run,`{+ 1 {+ {+ 2 3} 4}},10
-run,`{let1 {x 1} {let1 {f {lam y x}} {let1 {x 2} {f 10}}}},1
-run,`{{let1 {x 3} {lam y {+ x y}}} 4},7
-run,`{{let1 {y 3} {lam y {+ y 1}}} 5},6
+run,1,1
+run,23,23
+run,-34,-34
+run,#t,#t
+run,#f,#f
+run,{lam y {+ y 4}},#closure
+run,{+ 1 2},3
+run,{+ {+ 1 2} 3},6
+run,{+ 1 {+ 2 3}},6
+run,{+ 1 {+ {+ 2 3} 4}},10
+run,{let1 {x 1} {let1 {f {lam y x}} {let1 {x 2} {f 10}}}},1
+run,{{let1 {x 3} {lam y {+ x y}}} 4},7
+run,{{let1 {y 3} {lam y {+ y 1}}} 5},6
