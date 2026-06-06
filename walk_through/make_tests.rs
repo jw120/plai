@@ -63,7 +63,21 @@ fn header(language: Language) -> Result<&'static str> {
     }
 }
 
-fn data_lines(_language: Language, input: &File, output: &mut File) -> Result<()> {
+fn line_plait(command: &str, input: &str, output: &str) -> String {
+    let test_function = if output.starts_with('"') {
+        "test/exn"
+    } else {
+        "test"
+    };
+    let output = if command == "run" {
+        &format!("\"{output}\"")
+    } else {
+        output
+    };
+    format!("({test_function} ({command} {input}) {output})\n")
+}
+
+fn data_lines(language: Language, input: &File, output: &mut File) -> Result<()> {
     let reader = BufReader::new(input);
     for (line_number, line) in reader.lines().enumerate() {
         let line_number = line_number + 1;
@@ -75,16 +89,11 @@ fn data_lines(_language: Language, input: &File, output: &mut File) -> Result<()
         if parts.len() != 3 {
             bail!("failed at line {line_number}: {line}");
         }
-        let command = if parts[2].starts_with('"') {
-            "test/exn"
-        } else {
-            "test"
+        let output_line = match language {
+            Language::Plait => line_plait(parts[0], parts[1], parts[2]),
+            _ => bail!("NYI"),
         };
-        writeln!(
-            output,
-            "({} ({} {}) {})",
-            command, parts[0], parts[1], parts[2]
-        )?;
+        output.write_all(output_line.as_bytes())?;
     }
     Ok(())
 }

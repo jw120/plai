@@ -49,7 +49,7 @@
          [(symbol=? f '-) (subE (parse x) (parse y))]
          [(symbol=? f '*) (mulE (parse x) (parse y))]
          [(symbol=? f '/) (divE (parse x) (parse y))]
-         [else (error 'parse "unrecognized symbol applied")]))]
+         [else (error f "unrecognized symbol applied")]))]
     [else (error 'parse "unrecognized form in s-expression")]))
 
 ;;
@@ -78,11 +78,22 @@
   [boolV (the-boolean : Boolean)]
   [closV (var : Symbol) (body : Exp) (nv : Env)])
 
+(define (show [value : Value]) : String
+  (type-case Value value
+             [(numV number) (to-string number)]
+             [(boolV bool) (to-string bool)]
+             [(closV _var _body _nv) "#closure"]))
+
 ;;
 ;; Interpret
 ;;
 
 (define-type-alias Env (Hashof Symbol Value))
+
+(extend : (Env Symbol Value -> Env))
+
+(define (extend [old-env : Env] [new-name : Symbol] [value : Value]) : Env
+  (hash-set old-env new-name value))
 
 ;; Interpret from an empty environment
 (define (calc [e : Exp]) : Value
@@ -101,11 +112,16 @@
                                (interp e nv))]
              [(varE s) (lookup s nv)]
              [(let1E var val body)
-              (let ([new-env (hash-set nv var (interp val nv))])
+              (let ([new-env (extend nv var (interp val nv))])
                 (interp body new-env))]
-             [(lamE var body) (error 'interp "lamE NYI")]
-             [(appE fun arg) (error 'interp "appE NYI")]))
-
+             [(lamE var body) (closV var body nv)]
+             [(appE fun arg)
+              (let ([fun-value (interp fun nv)]
+                    [arg-value (interp arg nv)])
+                (type-case Value fun-value
+                           [(closV cv cb cnv) (interp cb (extend cnv cv arg-value))]
+                           [else (error 'app "didn't get a closure")]))]
+             ))
 
 ;; Lookup symbol in environment, error if not found
 (define (lookup [s : Symbol] [nv : Env]) : Value
@@ -140,6 +156,6 @@
 ;; Run
 ;;
 
-(define (run [s : S-Exp]) : Value
-  (calc (parse s)))
+(define (run [s : S-Exp]) : String
+  (show (calc (parse s))))
 
