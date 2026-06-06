@@ -6,9 +6,39 @@
 
 (define (parse [s : S-Exp]) : Exp
   (cond
+    ;; Terminals
     [(s-exp-number? s) (numE (s-exp->number s))]
-    [(s-exp-symbol? s) (error 'parse "cannot parse a symbol")]
+    [(s-exp-symbol? s) (varE (s-exp->symbol s))]
     [(s-exp-boolean? s) (boolE (s-exp->boolean s))]
+
+    ;; Special forms
+    [(s-exp-match? `(let1 (SYMBOL ANY) ANY) s)
+     (let* ([l (s-exp->list s)]
+            [var-list (s-exp->list (second l))]
+            [var (s-exp->symbol (first var-list))]
+            [value (second var-list)]
+            [body (third l)])
+       (let1E var (parse value) (parse body)))]
+    [(s-exp-match? `(lam SYMBOL ANY) s)
+     (let* ([l (s-exp->list s)]
+            [var (s-exp->symbol (second l))]
+            [body (third l)])
+       (lamE var (parse body)))]
+    [(s-exp-match? `(if ANY ANY ANY) s)
+     (let* ([l (s-exp->list s)]
+            [test-sexp (second l)]
+            [then-sexp (third l)]
+            [else-sexp (fourth l)])
+       (cndE (parse test-sexp) (parse then-sexp) (parse else-sexp)))]
+
+    ;; Unary function
+    [(s-exp-match? `(ANY ANY) s)
+     (let* ([l (s-exp->list s)]
+            [fun (first l)]
+            [arg (second l)])
+       (appE (parse fun) (parse arg)))]
+    
+    ;; Binary functions
     [(s-exp-match? `(SYMBOL ANY ANY) s)
      (let* ([l (s-exp->list s)]
             [f (s-exp->symbol (first l))]
@@ -29,13 +59,15 @@
 (define-type Exp
   [numE (n : Number)]
   [boolE (b : Boolean)]
+  [varE (name : Symbol)]
+  [cndE (test : Exp) (then : Exp) (else : Exp)]
+  [let1E (var : Symbol) (value : Exp) (body : Exp)]
+  [lamE (var : Symbol) (body : Exp)]
+  [appE (fun : Exp) (arg : Exp)]
   [addE (left : Exp) (right : Exp)]
   [subE (left : Exp) (right : Exp)]
   [mulE (left : Exp) (right : Exp)]
-  [divE (left : Exp) (right : Exp)]
-  [cndE (test : Exp) (then : Exp) (else : Exp)]
-  [varE (name : Symbol)]
-  [let1E (var : Symbol) (value : Exp) (body : Exp)])
+  [divE (left : Exp) (right : Exp)])
 
 ;;
 ;; Value
@@ -43,7 +75,8 @@
 
 (define-type Value
   [numV (the-number : Number)]
-  [boolV (the-boolean : Boolean)])
+  [boolV (the-boolean : Boolean)]
+  [closV (var : Symbol) (body : Exp) (nv : Env)])
 
 ;;
 ;; Interpret
@@ -69,7 +102,10 @@
              [(varE s) (lookup s nv)]
              [(let1E var val body)
               (let ([new-env (hash-set nv var (interp val nv))])
-                (interp body new-env))]))
+                (interp body new-env))]
+             [(lamE var body) (error 'interp "lamE NYI")]
+             [(appE fun arg) (error 'interp "appE NYI")]))
+
 
 ;; Lookup symbol in environment, error if not found
 (define (lookup [s : Symbol] [nv : Env]) : Value
