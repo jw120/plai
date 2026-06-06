@@ -49,7 +49,7 @@
          [(symbol=? f '-) (subE (parse x) (parse y))]
          [(symbol=? f '*) (mulE (parse x) (parse y))]
          [(symbol=? f '/) (divE (parse x) (parse y))]
-         [else (error f "unrecognized symbol applied")]))]
+         [else (error f "unrecognized symbol in binary function")]))]
     [else (error 'parse "unrecognized form in s-expression")]))
 
 ;;

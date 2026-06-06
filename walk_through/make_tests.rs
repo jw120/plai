@@ -59,6 +59,20 @@ fn header(language: Language) -> Result<&'static str> {
         Language::Plait => Ok("#lang plait\n\
                               (print-only-errors #true)\n\n\
                               (require \"evaluation.rkt\")\n\n"),
+        Language::Rust => Ok("#[cfg(test)]\n\n\
+                              mod tests {\n\n\
+                                  use evaluation::*;\n\n\
+                                  #[test]\n\
+                                  fn test_all() {\n"),
+                              
+        _ => Err(anyhow!("NYI")),
+    }
+}
+
+fn footer(language: Language) -> Result<&'static str> {
+    match language {
+        Language::Plait => Ok(""),
+        Language::Rust => Ok("    }\n}\n"),
         _ => Err(anyhow!("NYI")),
     }
 }
@@ -77,6 +91,14 @@ fn line_plait(command: &str, input: &str, output: &str) -> String {
     format!("({test_function} ({command} {input}) {output})\n")
 }
 
+fn line_rust(command: &str, input: &str, output: &str) -> String {
+    if command != "parse" {
+        return String::new();
+    }
+    format!("        assert_eq!({command}({input}), {output})\n")
+}
+
+
 fn data_lines(language: Language, input: &File, output: &mut File) -> Result<()> {
     let reader = BufReader::new(input);
     for (line_number, line) in reader.lines().enumerate() {
@@ -91,6 +113,7 @@ fn data_lines(language: Language, input: &File, output: &mut File) -> Result<()>
         }
         let output_line = match language {
             Language::Plait => line_plait(parts[0], parts[1], parts[2]),
+            Language::Rust => line_rust(parts[0], parts[1], parts[2]),
             _ => bail!("NYI"),
         };
         output.write_all(output_line.as_bytes())?;
@@ -111,6 +134,7 @@ fn main() -> Result<()> {
 
     output_file.write_all(header(args.language)?.as_bytes())?;
     data_lines(args.language, &input_file, &mut output_file)?;
+    output_file.write_all(footer(args.language)?.as_bytes())?;
 
     Ok(())
 }
