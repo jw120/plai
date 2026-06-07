@@ -121,10 +121,7 @@ fn is_symbol_char((i, c): &(usize, char)) -> bool {
     // c.is_ascii_alphabetic() || *c == '+' || *c == '-' || *c == '*' || *c == '/' || (*i > 0 && c.is_ascii_digit())
 }
 
-// Expressions
-//
-// Parsed AST
-
+/// Binary operations for use in expressions
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 enum BinOp {
     Add,
@@ -183,7 +180,11 @@ impl fmt::Display for BinOp {
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+/// Expressions
+//
+// Parsed AST
+
+#[derive(Clone, Debug, Eq, PartialEq)]
 enum Exp {
     Number(i32),
     Boolean(bool),
@@ -224,11 +225,13 @@ impl Exp {
 
 // Parse expression from s-expression
 fn parse_sexp(sexp: &SExp) -> Result<Exp> {
-    //println!("parse_sexp {sexp:?}");
     match sexp {
         SExp::Number(n) => Ok(Exp::Number(*n)),
+
         SExp::Boolean(b) => Ok(Exp::Boolean(*b)),
+
         SExp::Symbol(s) => Ok(Exp::Variable(s.clone())),
+
         SExp::List(v) => match &v[..] {
             // Form with three arguments
             [SExp::Symbol(f), a, b, c] => {
@@ -290,11 +293,13 @@ fn parse_sexp(sexp: &SExp) -> Result<Exp> {
                     "unrecognized symbol in list of 3 expressions: {sexp:?}"
                 )),
             },
+
             // Form with one argument
             [f, a] => Ok(Exp::Apply(
                 Box::new(parse_sexp(f)?),
                 Box::new(parse_sexp(a)?),
             )),
+
             _ => Err(anyhow!("unrecognized form in s-expression: {sexp:?}")),
         },
     }
@@ -312,12 +317,13 @@ pub fn parse(s: &str) -> Result<String> {
 
 /// Values
 //
+// Results of evaluations
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 enum Value {
     Number(i32),
     Boolean(bool),
-    Closure, // (Symbol, Exp, Env),
+    Closure(Symbol, Exp, Env),
 }
 
 impl fmt::Display for Value {
@@ -326,7 +332,7 @@ impl fmt::Display for Value {
             Self::Number(i) => &i.to_string(),
             Self::Boolean(true) => "#t",
             Self::Boolean(false) => "#f",
-            Self::Closure => "#closure",
+            Self::Closure(..) => "#closure",
         };
         write!(f, "{s}")
     }
@@ -344,10 +350,43 @@ fn calc(exp: &Exp) -> Result<Value> {
 fn interp(exp: &Exp, nv: &Env) -> Result<Value> {
     match exp {
         Exp::Number(i) => Ok(Value::Number(*i)),
+
         Exp::Boolean(b) => Ok(Value::Boolean(*b)),
+
         Exp::BinFn(op, l, r) => op.apply(&interp(l, nv)?, &interp(r, nv)?),
-        Exp::Lambda(_, _) => Ok(Value::Closure),
-        _ => Err(anyhow!("NYI")),
+
+        Exp::Lambda(var, body) => Ok(Value::Closure(var.clone(), *body.clone(), nv.clone())),
+
+        Exp::Variable(v) => if let Some(x) = nv.get(v) {
+            Ok(x.clone())
+        } else {
+            Err(anyhow!("{v} not bound"))
+        }
+
+        Exp::If(c, t, e) => if let Value::Boolean(b) = interp(c, nv)? {
+            if b {
+                interp(t, nv)
+            } else {
+                interp(e, nv)
+            }
+        } else {
+            Err(anyhow!("expects conditional to evaluate to a boolean"))
+        }
+
+        Exp::Let1(var, val, body) => {
+            let new_nv = nv.update(var.clone(), interp(val, nv)?);
+            interp(body, &new_nv)
+        }
+
+        Exp::Apply(fun, arg) => {
+            let arg = interp(arg, nv)?;
+            if let Value::Closure(var, body, cnv) = interp(fun, nv)? {
+                let new_cnv = cnv.update(var.clone(), arg);
+                interp(&body, &new_cnv)
+            } else {
+                Err(anyhow!("app didnt get a closure"))
+            }
+        }
     }
 }
 

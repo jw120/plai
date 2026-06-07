@@ -80,12 +80,15 @@ run,{- 10 6},4
 run,{/ 24 7},3
 run,{- {lam x {+ x 2}} 4},EXCEPTION:left hand side
 
-# Special forms - let
-run,{let1 {x 1} {let1 {f {lam y x}} {let1 {x 2} {f 10}}}},1
-run,{{let1 {x 3} {lam y {+ x y}}} 4},7
-run,{{let1 {y 3} {lam y {+ y 1}}} 5},6
-
 # Special forms - if
 run,{if #t 2 3},2
 run,{if #f 2 3},3
 run,{if 2 3 4},EXCEPTION:boolean
+
+# Special forms - let
+run,{let1 {x 2} {* x 4}},8
+run,{let1 {x 6} {let1 {y 7} {* x y}}},42
+run,{let1 {x 1} {let1 {f {lam y x}} {let1 {x 2} {f 10}}}},1
+run,{{let1 {x 3} {lam y {+ x y}}} 4},7
+run,{{let1 {y 3} {lam y {+ y 1}}} 5},6
+
