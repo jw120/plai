@@ -35,15 +35,20 @@ parse,{+ 1 {+ {+ 2 3} 4}},(addE (numE 1) (addE (addE (numE 2) (numE 3)) (numE 4)
 parse,{- 1 {* {/ 2 3} 4}},(subE (numE 1) (mulE (divE (numE 2) (numE 3)) (numE 4)))
 
 # Special forms
-#parse,{let1 {x 3} {* 2 x}},(let1E 'x (numE 3) (mulE (numE 2) (varE 'x)))
+parse,{let1 {q 2} 3},(let1E 'q (numE 2) (numE 3))
+parse,{let1 {q 2 3} 4},EXCEPTION:unrecognized
+parse,{let1 q 4},EXCEPTION:unrecognized
+parse,{let1 {q} 4},EXCEPTION:unrecognized
+parse,{let1 {x 3} {* 2 x}},(let1E 'x (numE 3) (mulE (numE 2) (varE 'x)))
 parse,{lam y {+ y 4}},(lamE 'y (addE (varE 'y) (numE 4)))
-#parse,{let1 {x 3} {let1 {y 2} {+ x y}}},(let1E 'x (numE 3) (let1E 'y (numE 2) (addE (varE 'x) (varE 'y))))
+parse,{let1 {x 3} {let1 {y 2} {+ x y}}},(let1E 'x (numE 3) (let1E 'y (numE 2) (addE (varE 'x) (varE 'y))))
 parse,{if x {+ y 3} {- y 4}},(ifE (varE 'x) (addE (varE 'y) (numE 3)) (subE (varE 'y) (numE 4)))
+parse,{f x},(appE (varE 'f) (varE 'x))
 
 # Special forms - book examples
-#parse,{let1 {f {lam x {+ x x}}} {f 3}},(let1E 'f (lamE 'x (addE (varE 'x) (varE 'x))) (appE (varE 'f) (numE 3)))
-#parse,{let1 {x 3} {let1 {f {lam y {+ x y}}} {f 3}}},(let1E 'x (numE 3) (let1E 'f (lamE 'y (addE (varE 'x) (varE 'y))) (appE (varE 'f) (numE 3))))
-#parse,{let1 {x 1} {let1 {f {lam y x}} {let1 {x 2} {f 10}}}},(let1E 'x (numE 1) (let1E 'f (lamE 'y (varE 'x)) (let1E 'x (numE 2) (appE (varE 'f) (numE 10)))))
+parse,{let1 {f {lam x {+ x x}}} {f 3}},(let1E 'f (lamE 'x (addE (varE 'x) (varE 'x))) (appE (varE 'f) (numE 3)))
+parse,{let1 {x 3} {let1 {f {lam y {+ x y}}} {f 3}}},(let1E 'x (numE 3) (let1E 'f (lamE 'y (addE (varE 'x) (varE 'y))) (appE (varE 'f) (numE 3))))
+parse,{let1 {x 1} {let1 {f {lam y x}} {let1 {x 2} {f 10}}}},(let1E 'x (numE 1) (let1E 'f (lamE 'y (varE 'x)) (let1E 'x (numE 2) (appE (varE 'f) (numE 10)))))
 
 # Errors
 parse,{! 3 2},EXCEPTION:unrecognized symbol

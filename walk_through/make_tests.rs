@@ -37,7 +37,7 @@ impl Test {
         }
     }
 
-    fn to_str(&self) -> &'static str {
+    fn to_str(self) -> &'static str {
         match self {
             Self::Parse => "parse",
             Self::Run => "run",
@@ -110,11 +110,7 @@ fn footer(language: Language) -> Result<&'static str> {
 }
 
 fn line_plait(test: Test, exception: bool, input: &str, expected: &str) -> String {
-    let test_function =  if exception {
-        "test/exn"
-    } else {
-        "test"
-    };
+    let test_function = if exception { "test/exn" } else { "test" };
     let quote_output = match test {
         Test::Parse => exception,
         Test::Run => true,
@@ -124,14 +120,20 @@ fn line_plait(test: Test, exception: bool, input: &str, expected: &str) -> Strin
     } else {
         expected
     };
-    format!("({test_function} ({} `{input}) {expected})\n", test.to_str())
+    format!(
+        "({test_function} ({} `{input}) {expected})\n",
+        test.to_str()
+    )
 }
 
 fn line_rust(test: Test, exception: bool, input: &str, expected: &str) -> String {
     if test == Test::Run || exception {
         return String::new();
     }
-    format!("    assert_eq!({}(\"{input}\").unwrap(), \"{expected}\");\n", test.to_str())
+    format!(
+        "    assert_eq!({}(\"{input}\").unwrap(), \"{expected}\");\n",
+        test.to_str()
+    )
 }
 
 fn data_lines(language: Language, input: &File, output: &mut File) -> Result<()> {
