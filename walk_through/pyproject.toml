@@ -38,13 +38,17 @@ ignore = [
   "S607",
   # allow print statements
   "T201",
+  # don't required documeinting exceptions
+  "DOC501",
   # allow documenting implicit exceptions
   "DOC502",
   # allow commented-out code
   "ERA001",
+  # allow assert in tests
+  "S101", 
   #
   # Exceptions
-    #
+  #
   # allow strings and f-strings in exceptions (even though it causes duplication in tracebacks )
   "EM101",
   "EM102",
@@ -73,6 +77,4 @@ ignore = [
 
 # [tool.ruff.lint.per-file-ignores]
 # "test_*.py" = [
-#     # allow assert in tests
-#     "S101", 
 # ]

@@ -357,20 +357,20 @@ fn interp(exp: &Exp, nv: &Env) -> Result<Value> {
 
         Exp::Lambda(var, body) => Ok(Value::Closure(var.clone(), *body.clone(), nv.clone())),
 
-        Exp::Variable(v) => if let Some(x) = nv.get(v) {
-            Ok(x.clone())
-        } else {
-            Err(anyhow!("{v} not bound"))
+        Exp::Variable(v) => {
+            if let Some(x) = nv.get(v) {
+                Ok(x.clone())
+            } else {
+                Err(anyhow!("{v} not bound"))
+            }
         }
 
-        Exp::If(c, t, e) => if let Value::Boolean(b) = interp(c, nv)? {
-            if b {
-                interp(t, nv)
+        Exp::If(c, t, e) => {
+            if let Value::Boolean(b) = interp(c, nv)? {
+                if b { interp(t, nv) } else { interp(e, nv) }
             } else {
-                interp(e, nv)
+                Err(anyhow!("expects conditional to evaluate to a boolean"))
             }
-        } else {
-            Err(anyhow!("expects conditional to evaluate to a boolean"))
         }
 
         Exp::Let1(var, val, body) => {
@@ -474,7 +474,11 @@ mod tests {
         let exp = parse_sexp(&sexp).unwrap();
         assert_eq!(
             exp,
-            Exp::BinFn(BinOp::Mul, Box::new(Exp::Number(2)), Box::new(Exp::Number(3)))
+            Exp::BinFn(
+                BinOp::Mul,
+                Box::new(Exp::Number(2)),
+                Box::new(Exp::Number(3))
+            )
         );
     }
 
@@ -493,7 +497,11 @@ mod tests {
         let exp = parse_sexp(&sexp).unwrap();
         assert_eq!(
             exp,
-            Exp::BinFn(BinOp::Add, Box::new(Exp::Number(22)), Box::new(Exp::Number(33)))
+            Exp::BinFn(
+                BinOp::Add,
+                Box::new(Exp::Number(22)),
+                Box::new(Exp::Number(33))
+            )
         );
     }
 
