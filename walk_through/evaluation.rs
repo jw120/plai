@@ -1,6 +1,9 @@
 #![allow(dead_code)] // Code only use for testing
 
+use std::fmt;
+
 use anyhow::{Result, anyhow, bail};
+use imbl::HashMap;
 
 // S-expressions
 //
@@ -122,6 +125,64 @@ fn is_symbol_char((i, c): &(usize, char)) -> bool {
 //
 // Parsed AST
 
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+enum BinOp {
+    Add,
+    Sub,
+    Mul,
+    Div,
+}
+
+impl BinOp {
+    fn apply(self, left: &Value, right: &Value) -> Result<Value> {
+        if let Value::Number(l) = left {
+            if let Value::Number(r) = right {
+                match self {
+                    Self::Add => Ok(Value::Number(l + r)),
+                    Self::Sub => Ok(Value::Number(l - r)),
+                    Self::Mul => Ok(Value::Number(l * r)),
+                    Self::Div => {
+                        if *r != 0 {
+                            Ok(Value::Number(l / r))
+                        } else {
+                            Err(anyhow!("division by zero"))
+                        }
+                    }
+                }
+            } else {
+                Err(anyhow!("{self} expects right hand side to be a number"))
+            }
+        } else {
+            Err(anyhow!("{self} expects left hand side to be a number"))
+        }
+    }
+
+    // Return in string to match plait output
+    fn show_plait(self) -> &'static str {
+        match self {
+            Self::Add => "addE",
+            Self::Sub => "subE",
+            Self::Mul => "mulE",
+            Self::Div => "divE",
+        }
+    }
+}
+
+impl fmt::Display for BinOp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match &self {
+                Self::Add => '+',
+                Self::Sub => '-',
+                Self::Mul => '*',
+                Self::Div => '/',
+            }
+        )
+    }
+}
+
 #[derive(Debug, Eq, PartialEq)]
 enum Exp {
     Number(i32),
@@ -131,10 +192,7 @@ enum Exp {
     Let1(Symbol, Box<Exp>, Box<Exp>),
     Lambda(Symbol, Box<Exp>),
     Apply(Box<Exp>, Box<Exp>),
-    Add(Box<Exp>, Box<Exp>),
-    Sub(Box<Exp>, Box<Exp>),
-    Mul(Box<Exp>, Box<Exp>),
-    Div(Box<Exp>, Box<Exp>),
+    BinFn(BinOp, Box<Exp>, Box<Exp>),
 }
 
 impl Exp {
@@ -154,10 +212,12 @@ impl Exp {
             Self::Let1(s, a, b) => format!("(let1E '{s} {} {})", a.show_plait(), b.show_plait()),
             Self::Lambda(s, b) => format!("(lamE '{s} {})", b.show_plait()),
             Self::Apply(f, b) => format!("(appE {} {})", f.show_plait(), b.show_plait()),
-            Self::Add(l, r) => format!("(addE {} {})", l.show_plait(), r.show_plait()),
-            Self::Sub(l, r) => format!("(subE {} {})", l.show_plait(), r.show_plait()),
-            Self::Mul(l, r) => format!("(mulE {} {})", l.show_plait(), r.show_plait()),
-            Self::Div(l, r) => format!("(divE {} {})", l.show_plait(), r.show_plait()),
+            Self::BinFn(op, l, r) => format!(
+                "({} {} {})",
+                op.show_plait(),
+                l.show_plait(),
+                r.show_plait()
+            ),
         }
     }
 }
@@ -185,10 +245,26 @@ fn parse_sexp(sexp: &SExp) -> Result<Exp> {
 
             // Form with two arguments
             [SExp::Symbol(f), a, b] => match f.as_str() {
-                "+" => Ok(Exp::Add(Box::new(parse_sexp(a)?), Box::new(parse_sexp(b)?))),
-                "-" => Ok(Exp::Sub(Box::new(parse_sexp(a)?), Box::new(parse_sexp(b)?))),
-                "*" => Ok(Exp::Mul(Box::new(parse_sexp(a)?), Box::new(parse_sexp(b)?))),
-                "/" => Ok(Exp::Div(Box::new(parse_sexp(a)?), Box::new(parse_sexp(b)?))),
+                "+" => Ok(Exp::BinFn(
+                    BinOp::Add,
+                    Box::new(parse_sexp(a)?),
+                    Box::new(parse_sexp(b)?),
+                )),
+                "-" => Ok(Exp::BinFn(
+                    BinOp::Sub,
+                    Box::new(parse_sexp(a)?),
+                    Box::new(parse_sexp(b)?),
+                )),
+                "*" => Ok(Exp::BinFn(
+                    BinOp::Mul,
+                    Box::new(parse_sexp(a)?),
+                    Box::new(parse_sexp(b)?),
+                )),
+                "/" => Ok(Exp::BinFn(
+                    BinOp::Div,
+                    Box::new(parse_sexp(a)?),
+                    Box::new(parse_sexp(b)?),
+                )),
                 "lam" => {
                     if let SExp::Symbol(variable) = a {
                         Ok(Exp::Lambda(variable.clone(), Box::new(parse_sexp(b)?)))
@@ -211,7 +287,7 @@ fn parse_sexp(sexp: &SExp) -> Result<Exp> {
                     }
                 }
                 _ => Err(anyhow!(
-                    "unrecognized form in list of 3 expressions: {sexp:?}"
+                    "unrecognized symbol in list of 3 expressions: {sexp:?}"
                 )),
             },
             // Form with one argument
@@ -219,7 +295,7 @@ fn parse_sexp(sexp: &SExp) -> Result<Exp> {
                 Box::new(parse_sexp(f)?),
                 Box::new(parse_sexp(a)?),
             )),
-            _ => Err(anyhow!("Unrecognized form in s-expression: {sexp:?}")),
+            _ => Err(anyhow!("unrecognized form in s-expression: {sexp:?}")),
         },
     }
 }
@@ -232,6 +308,58 @@ pub fn parse(s: &str) -> Result<String> {
     }
     let exp = parse_sexp(&sexp)?;
     Ok(exp.show_plait())
+}
+
+/// Values
+//
+
+#[derive(Debug, Eq, PartialEq)]
+enum Value {
+    Number(i32),
+    Boolean(bool),
+    Closure, // (Symbol, Exp, Env),
+}
+
+impl fmt::Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match &self {
+            Self::Number(i) => &i.to_string(),
+            Self::Boolean(true) => "#t",
+            Self::Boolean(false) => "#f",
+            Self::Closure => "#closure",
+        };
+        write!(f, "{s}")
+    }
+}
+
+/// Env is an immutable hash map
+type Env = HashMap<Symbol, Value>;
+
+/// Interpret from an empty environment
+fn calc(exp: &Exp) -> Result<Value> {
+    interp(exp, &Env::new())
+}
+
+/// Interpret an expression
+fn interp(exp: &Exp, nv: &Env) -> Result<Value> {
+    match exp {
+        Exp::Number(i) => Ok(Value::Number(*i)),
+        Exp::Boolean(b) => Ok(Value::Boolean(*b)),
+        Exp::BinFn(op, l, r) => op.apply(&interp(l, nv)?, &interp(r, nv)?),
+        Exp::Lambda(_, _) => Ok(Value::Closure),
+        _ => Err(anyhow!("NYI")),
+    }
+}
+
+/// Parse, evaluate and convert to a string
+pub fn run(s: &str) -> Result<String> {
+    let (sexp, rest) = read_sexp(s)?;
+    if !rest.trim().is_empty() {
+        bail!("Leftover string in parse");
+    }
+    let exp = parse_sexp(&sexp)?;
+    let value = calc(&exp)?;
+    Ok(value.to_string())
 }
 
 #[cfg(test)]
@@ -307,7 +435,7 @@ mod tests {
         let exp = parse_sexp(&sexp).unwrap();
         assert_eq!(
             exp,
-            Exp::Mul(Box::new(Exp::Number(2)), Box::new(Exp::Number(3)))
+            Exp::BinFn(BinOp::Mul, Box::new(Exp::Number(2)), Box::new(Exp::Number(3)))
         );
     }
 
@@ -326,7 +454,7 @@ mod tests {
         let exp = parse_sexp(&sexp).unwrap();
         assert_eq!(
             exp,
-            Exp::Add(Box::new(Exp::Number(22)), Box::new(Exp::Number(33)))
+            Exp::BinFn(BinOp::Add, Box::new(Exp::Number(22)), Box::new(Exp::Number(33)))
         );
     }
 
@@ -353,7 +481,8 @@ mod tests {
             Exp::If(
                 Box::new(Exp::Variable("x".to_string())),
                 Box::new(Exp::Number(2)),
-                Box::new(Exp::Add(
+                Box::new(Exp::BinFn(
+                    BinOp::Add,
                     Box::new(Exp::Variable("y".to_string())),
                     Box::new(Exp::Number(4))
                 ))

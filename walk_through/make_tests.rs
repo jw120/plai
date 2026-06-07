@@ -127,13 +127,14 @@ fn line_plait(test: Test, exception: bool, input: &str, expected: &str) -> Strin
 }
 
 fn line_rust(test: Test, exception: bool, input: &str, expected: &str) -> String {
-    if test == Test::Run || exception {
-        return String::new();
+    let test = test.to_str();
+    if exception {
+        format!(
+            "    assert!({test}(\"{input}\").unwrap_err().to_string().contains(\"{expected}\"));\n"
+        )
+    } else {
+        format!("    assert_eq!({test}(\"{input}\").unwrap(), \"{expected}\");\n")
     }
-    format!(
-        "    assert_eq!({}(\"{input}\").unwrap(), \"{expected}\");\n",
-        test.to_str()
-    )
 }
 
 fn data_lines(language: Language, input: &File, output: &mut File) -> Result<()> {

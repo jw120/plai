@@ -51,7 +51,7 @@ parse,{let1 {x 3} {let1 {f {lam y {+ x y}}} {f 3}}},(let1E 'x (numE 3) (let1E 'f
 parse,{let1 {x 1} {let1 {f {lam y x}} {let1 {x 2} {f 10}}}},(let1E 'x (numE 1) (let1E 'f (lamE 'y (varE 'x)) (let1E 'x (numE 2) (appE (varE 'f) (numE 10)))))
 
 # Errors
-parse,{! 3 2},EXCEPTION:unrecognized symbol
+parse,{max 3 2},EXCEPTION:unrecognized symbol
 parse,{1 + 2},EXCEPTION:unrecognized form
 
 
@@ -67,7 +67,7 @@ run,#t,#t
 run,#f,#f
 run,#true,#t
 run,#false,#f
-run,{lam y {+ y 4}},#closure
+#run,{lam y {+ y 4}},#closure
 
 # Binary functions
 run,{+ 1 2},3

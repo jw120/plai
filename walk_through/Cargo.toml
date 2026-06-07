@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 anyhow = "1.0.102"
+imbl = "7.0.0"
 lexopt = "0.3.2"
 
 #[lib]
