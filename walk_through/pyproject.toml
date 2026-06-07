@@ -1,0 +1,78 @@
+[project]
+name = "evaluation"
+version = "0.1.0"
+description = "Python implementation of plai evaluation"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "pytest>=9.0.3",
+]
+
+[tool.ty.rules]
+all = "error"
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+
+[tool.ruff.lint.pylint]
+max-args = 8 # (Default is 5)
+max-branches = 50 # (Default is 12)
+max-nested-blocks = 7 # (Default is 5)
+max-returns = 15 # (Default is 6)
+max-statements = 100 # (Default is 50)
+
+[tool.ruff.lint.mccabe]
+max-complexity = 50 # (Default is 10)
+
+[tool.ruff.lint]
+preview = true
+select = ["ALL"]
+ignore = [
+  #
+  # General
+  #
+  # don't warn about possibly insecure input to subprocess
+  "S404",
+  "S603",
+  "S607",
+  # allow print statements
+  "T201",
+  # allow documenting implicit exceptions
+  "DOC502",
+  # allow commented-out code
+  "ERA001",
+  #
+  # Exceptions
+    #
+  # allow strings and f-strings in exceptions (even though it causes duplication in tracebacks )
+  "EM101",
+  "EM102",
+  # allow long-messages in exceptions
+  "TRY003",
+  #
+  # Formatting
+  #
+  # line-lengths
+  "E501",
+  # don't require docstring for __init__
+  "D107",
+  # don't require returns to be documented
+  "DOC201",
+  # don't disallow blank line after function docstring
+  "D202",
+  # one-blank-line-before-class (clashes with D211)
+  "D203",
+  # multi-line-summary-second-line (clashes with D212)
+  "D213",
+  # allow trailing commas
+  "COM812",
+  # don't require copyright notices
+  "CPY001",
+]
+
+# [tool.ruff.lint.per-file-ignores]
+# "test_*.py" = [
+#     # allow assert in tests
+#     "S101", 
+# ]
