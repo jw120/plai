@@ -3,7 +3,7 @@
 all: plait rust
 
 plait: evaluation_test.rkt
-	raco test $<
+	raco test $< evaluation.rkt
 
 evaluation_test.rkt: test_definitions.csv make_tests.rs
 	cargo run --bin=make_tests -- --input=$< --language=plait --output=$@

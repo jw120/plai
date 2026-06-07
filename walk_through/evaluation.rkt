@@ -29,7 +29,7 @@
             [test-sexp (second l)]
             [then-sexp (third l)]
             [else-sexp (fourth l)])
-       (cndE (parse test-sexp) (parse then-sexp) (parse else-sexp)))]
+       (ifE (parse test-sexp) (parse then-sexp) (parse else-sexp)))]
 
     ;; Unary function
     [(s-exp-match? `(ANY ANY) s)
@@ -60,7 +60,7 @@
   [numE (n : Number)]
   [boolE (b : Boolean)]
   [varE (name : Symbol)]
-  [cndE (test : Exp) (then : Exp) (else : Exp)]
+  [ifE (test : Exp) (then : Exp) (else : Exp)]
   [let1E (var : Symbol) (value : Exp) (body : Exp)]
   [lamE (var : Symbol) (body : Exp)]
   [appE (fun : Exp) (arg : Exp)]
@@ -107,9 +107,9 @@
              [(subE l r) (binary-numeric - '- (interp l nv) (interp r nv))]
              [(mulE l r) (binary-numeric * '* (interp l nv) (interp r nv))]
              [(divE l r) (binary-numeric divide '/ (interp l nv) (interp r nv))]
-             [(cndE c t e) (if (as-boolean (interp c nv))
-                               (interp t nv)
-                               (interp e nv))]
+             [(ifE c t e) (if (as-boolean (interp c nv))
+                              (interp t nv)
+                              (interp e nv))]
              [(varE s) (lookup s nv)]
              [(let1E var val body)
               (let ([new-env (extend nv var (interp val nv))])
@@ -150,6 +150,28 @@
   (type-case Value v
              [(boolV b) b]
              [else (error 'if "expects conditional to evaluate to a boolean")]))
+
+
+(module+ test
+  (print-only-errors #true)
+  (test (calc (numE 1)) (numV 1))
+  (test (calc (boolE #t)) (boolV #t))
+  (test (calc (addE (numE 1) (numE 2))) (numV 3))
+  (test (calc (addE (addE (numE 1) (numE 2)) (numE 3))) (numV 6))
+  (test (calc (addE (numE 1) (addE (numE 2) (numE 4)))) (numV 7))
+  (test (calc (addE (numE 1) (addE (addE (numE 2) (numE 3))(numE 4)))) (numV 10))
+  (test/exn (calc (addE (numE 1) (boolE #t))) "right hand side")
+  (test (calc (subE (numE 1) (numE 2))) (numV -1))
+  (test (calc (mulE (numE 3) (numE 4))) (numV 12))
+  (test (calc (divE (numE 6) (numE 2))) (numV 3))
+  (test (calc (divE (numE 6) (numE 4))) (numV 1))
+  (test/exn (calc (divE (numE 1) (numE 0))) "division by zero")
+  (test/exn (calc (addE (boolE #f) (boolE #t))) "left hand side")
+  (test (calc (ifE (boolE #f) (numE 2) (numE 3))) (numV 3))
+  (test (calc (ifE (boolE #t) (numE 2) (numE 3))) (numV 2))
+  (test/exn (calc (ifE (numE 2) (numE 2) (numE 3))) "boolean")
+  (test (calc (let1E 'x (numE 7) (mulE (varE 'x) (numE 6)))) (numV 42))
+  (test (calc (appE (lamE 'z (divE (numE 24) (varE 'z))) (numE 6))) (numV 4)))
 
 
 ;;

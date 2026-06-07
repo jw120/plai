@@ -2,13 +2,47 @@ use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
 use std::path::PathBuf;
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{Context, Ok, Result, anyhow, bail};
 
 #[derive(Clone, Copy, Debug)]
 enum Language {
     Plait,
     Python,
     Rust,
+}
+
+impl Language {
+    fn parse(s: &str) -> Result<Self> {
+        match s.to_lowercase().as_str() {
+            "plait" => Ok(Self::Plait),
+            "python" => Ok(Self::Python),
+            "rust" => Ok(Self::Rust),
+            _ => Err(anyhow!("Unknown language: '{s}'")),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Test {
+    Parse,
+    Run,
+}
+
+impl Test {
+    fn parse(s: &str) -> Result<Self> {
+        match s {
+            "parse" => Ok(Self::Parse),
+            "run" => Ok(Self::Run),
+            _ => Err(anyhow!("Unknown test command: '{s}'")),
+        }
+    }
+
+    fn to_str(&self) -> &'static str {
+        match self {
+            Self::Parse => "parse",
+            Self::Run => "run",
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -27,14 +61,7 @@ fn parse_args() -> Result<Args> {
     let mut parser = lexopt::Parser::from_env();
     while let Some(arg) = parser.next()? {
         match arg {
-            Long("language") => {
-                language = match parser.value()?.string()?.to_lowercase().as_str() {
-                    "plait" => Some(Language::Plait),
-                    "python" => Some(Language::Python),
-                    "rust" => Some(Language::Rust),
-                    _ => bail!("Unknown language"),
-                }
-            }
+            Long("language") => language = Some(Language::parse(&parser.value()?.string()?)?),
             Long("input") => input = Some(PathBuf::from(parser.value()?.string()?)),
             Long("output") => output = Some(PathBuf::from(parser.value()?.string()?)),
             Long("help") => {
@@ -56,16 +83,20 @@ fn parse_args() -> Result<Args> {
 
 fn header(language: Language) -> Result<&'static str> {
     match language {
-        Language::Plait => Ok("#lang plait\n\
-                              (print-only-errors #true)\n\n\
-                              (require \"evaluation.rkt\")\n\n"),
+        Language::Plait => Ok(r#"
+#lang plait
+
+(print-only-errors #true)
+(require "evaluation.rkt")
+
+"#),
         Language::Rust => Ok("mod evaluation;\n\n\
                               #[cfg(test)]\n\n\
                               mod tests {\n\n\
                               use crate::evaluation::*;\n\n\
                               #[test]\n\
                               fn test_all() {\n"),
-                              
+
         Language::Python => Err(anyhow!("NYI")),
     }
 }
@@ -78,32 +109,30 @@ fn footer(language: Language) -> Result<&'static str> {
     }
 }
 
-fn line_plait(command: &str, input: &str, output: &str) -> String {
-    let test_function = if output.starts_with('"') {
+fn line_plait(test: Test, exception: bool, input: &str, expected: &str) -> String {
+    let test_function =  if exception {
         "test/exn"
     } else {
         "test"
     };
-    let quote = if command == "parse" || command == "run" {
-        "`"
-    } else {
-        ""
+    let quote_output = match test {
+        Test::Parse => exception,
+        Test::Run => true,
     };
-    let output = if command == "run" {
-        &format!("\"{output}\"")
+    let expected = if quote_output {
+        &format!("\"{expected}\"")
     } else {
-        output
+        expected
     };
-    format!("({test_function} ({command} {quote}{input}) {output})\n")
+    format!("({test_function} ({} `{input}) {expected})\n", test.to_str())
 }
 
-fn line_rust(command: &str, input: &str, output: &str) -> String {
-    if command != "parse" || output.starts_with('"') {
+fn line_rust(test: Test, exception: bool, input: &str, expected: &str) -> String {
+    if test == Test::Run || exception {
         return String::new();
     }
-    format!("    assert_eq!({command}(\"{input}\").unwrap(), \"{output}\");\n")
+    format!("    assert_eq!({}(\"{input}\").unwrap(), \"{expected}\");\n", test.to_str())
 }
-
 
 fn data_lines(language: Language, input: &File, output: &mut File) -> Result<()> {
     let reader = BufReader::new(input);
@@ -117,9 +146,19 @@ fn data_lines(language: Language, input: &File, output: &mut File) -> Result<()>
         if parts.len() != 3 {
             bail!("failed at line {line_number}: {line}");
         }
+        let test = Test::parse(parts[0])?;
+        let exception;
+        let expected;
+        if let Some(rest) = parts[2].strip_prefix("EXCEPTION:") {
+            exception = true;
+            expected = rest;
+        } else {
+            exception = false;
+            expected = parts[2];
+        }
         let output_line = match language {
-            Language::Plait => line_plait(parts[0], parts[1], parts[2]),
-            Language::Rust => line_rust(parts[0], parts[1], parts[2]),
+            Language::Plait => line_plait(test, exception, parts[1], expected),
+            Language::Rust => line_rust(test, exception, parts[1], expected),
             Language::Python => bail!("NYI"),
         };
         output.write_all(output_line.as_bytes())?;
