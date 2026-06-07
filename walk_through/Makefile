@@ -35,6 +35,10 @@ python-check:
 	ty check evaluation.py
 	ruff check evaluation.py
 
+python-fix:
+	ruff check --fix --unsafe-fixes evaluation.py
+
+
 rust-check:
 	cargo fmt
 	cargo clippy

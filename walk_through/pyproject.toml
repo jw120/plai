@@ -8,6 +8,10 @@ dependencies = [
     "pytest>=9.0.3",
 ]
 
+[tool.pytest]
+strict = true
+addopts = ["--import-mode=importlib"]
+
 [tool.ty.rules]
 all = "error"
 
@@ -45,7 +49,9 @@ ignore = [
   # allow commented-out code
   "ERA001",
   # allow assert in tests
-  "S101", 
+  "S101",
+  # allow magic values
+  "PLR2004",
   #
   # Exceptions
   #

@@ -90,22 +90,36 @@ fn header(language: Language) -> Result<&'static str> {
 (require "evaluation.rkt")
 
 "#),
-        Language::Rust => Ok("mod evaluation;\n\n\
-                              #[cfg(test)]\n\n\
-                              mod tests {\n\n\
-                              use crate::evaluation::*;\n\n\
-                              #[test]\n\
-                              fn test_all() {\n"),
 
-        Language::Python => Err(anyhow!("NYI")),
+        Language::Python => Ok(r#"
+import pytest
+
+from evaluation import parse
+
+def test_all() -> None:
+    """Generated tests."""
+
+"#),
+
+        Language::Rust => Ok(r"
+mod evaluation;
+            
+#[cfg(test)]
+            
+mod tests {
+                
+    use crate::evaluation::*;
+    
+    #[test]
+    fn test_all() {
+"),
     }
 }
 
 fn footer(language: Language) -> Result<&'static str> {
     match language {
-        Language::Plait => Ok(""),
+        Language::Plait | Language::Python => Ok(""),
         Language::Rust => Ok("    }\n}\nfn main() { }\n"),
-        Language::Python => Err(anyhow!("NYI")),
     }
 }
 
@@ -124,6 +138,21 @@ fn line_plait(test: Test, exception: bool, input: &str, expected: &str) -> Strin
         "({test_function} ({} `{input}) {expected})\n",
         test.to_str()
     )
+}
+
+fn line_python(test: Test, exception: bool, input: &str, expected: &str) -> String {
+    if test == Test::Run {
+        return String::new();
+    }
+    let test = test.to_str();
+    if exception {
+        format!(
+            "    with pytest.raises(ValueError, match=r\"(?i).*{expected}.*\"):
+                         {test}(\"{input}\")\n"
+        )
+    } else {
+        format!("    assert {test}(\"{input}\") == \"{expected}\"\n")
+    }
 }
 
 fn line_rust(test: Test, exception: bool, input: &str, expected: &str) -> String {
@@ -161,8 +190,8 @@ fn data_lines(language: Language, input: &File, output: &mut File) -> Result<()>
         }
         let output_line = match language {
             Language::Plait => line_plait(test, exception, parts[1], expected),
+            Language::Python => line_python(test, exception, parts[1], expected),
             Language::Rust => line_rust(test, exception, parts[1], expected),
-            Language::Python => bail!("NYI"),
         };
         output.write_all(output_line.as_bytes())?;
     }
