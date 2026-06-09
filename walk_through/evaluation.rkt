@@ -120,7 +120,7 @@
                     [arg-value (interp arg nv)])
                 (type-case Value fun-value
                            [(closV cv cb cnv) (interp cb (extend cnv cv arg-value))]
-                           [else (error 'app "didn't get a closure")]))]
+                           [else (error 'app "on  a non-closure")]))]
              ))
 
 ;; Lookup symbol in environment, error if not found

@@ -361,7 +361,7 @@ fn interp(exp: &Exp, nv: &Env) -> Result<Value> {
             if let Some(x) = nv.get(v) {
                 Ok(x.clone())
             } else {
-                Err(anyhow!("{v} not bound"))
+                Err(anyhow!("{v}: not bound"))
             }
         }
 
@@ -384,7 +384,7 @@ fn interp(exp: &Exp, nv: &Env) -> Result<Value> {
                 let new_cnv = cnv.update(var.clone(), arg);
                 interp(&body, &new_cnv)
             } else {
-                Err(anyhow!("app didnt get a closure"))
+                Err(anyhow!("applying a non-closure"))
             }
         }
     }

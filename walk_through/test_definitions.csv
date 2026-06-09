@@ -83,7 +83,6 @@ run,{- {lam x {+ x 2}} 4},EXCEPTION:left hand side
 # Special forms - if
 run,{if #t 2 3},2
 run,{if #f 2 3},3
-run,{if 2 3 4},EXCEPTION:boolean
 
 # Special forms - let
 run,{let1 {x 2} {* x 4}},8
@@ -92,3 +91,8 @@ run,{let1 {x 1} {let1 {f {lam y x}} {let1 {x 2} {f 10}}}},1
 run,{{let1 {x 3} {lam y {+ x y}}} 4},7
 run,{{let1 {y 3} {lam y {+ y 1}}} 5},6
 
+# Errors
+run,x,EXCEPTION:x: not bound
+run,{let1 {f 3} {f 44}},EXCEPTION:non-closure
+run,{/ 5 0},EXCEPTION:division by zero
+run,{if 2 3 4},EXCEPTION:boolean

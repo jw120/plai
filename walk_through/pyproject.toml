@@ -20,14 +20,12 @@ line-length = 100
 target-version = "py314"
 
 [tool.ruff.lint.pylint]
-max-args = 8 # (Default is 5)
-max-branches = 50 # (Default is 12)
-max-nested-blocks = 7 # (Default is 5)
-max-returns = 15 # (Default is 6)
-max-statements = 100 # (Default is 50)
+max-branches = 21 # (Default is 12)
+max-returns = 13 # (Default is 6)
+max-locals = 22 # (Default is 15)
 
 [tool.ruff.lint.mccabe]
-max-complexity = 50 # (Default is 10)
+max-complexity = 21 # (Default is 10)
 
 [tool.ruff.lint]
 preview = true
@@ -80,7 +78,3 @@ ignore = [
   # don't require copyright notices
   "CPY001",
 ]
-
-# [tool.ruff.lint.per-file-ignores]
-# "test_*.py" = [
-# ]

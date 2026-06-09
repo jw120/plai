@@ -94,7 +94,7 @@ fn header(language: Language) -> Result<&'static str> {
         Language::Python => Ok(r#"
 import pytest
 
-from evaluation import parse
+from evaluation import parse, run, EvalError
 
 def test_all() -> None:
     """Generated tests."""
@@ -141,13 +141,10 @@ fn line_plait(test: Test, exception: bool, input: &str, expected: &str) -> Strin
 }
 
 fn line_python(test: Test, exception: bool, input: &str, expected: &str) -> String {
-    if test == Test::Run {
-        return String::new();
-    }
     let test = test.to_str();
     if exception {
         format!(
-            "    with pytest.raises(ValueError, match=r\"(?i).*{expected}.*\"):
+            "    with pytest.raises(EvalError, match=r\"(?i).*{expected}.*\"):
                          {test}(\"{input}\")\n"
         )
     } else {
