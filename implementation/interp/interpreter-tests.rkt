@@ -60,6 +60,25 @@
   (test-equal? "if false does not evaluate consq"
                (eval `(if (num= 4 (+ 2 3)) (++ 2 3) 19)) (v-num 19))
 
+  ;; Lambdas
+  (test-true "Works with lambda"
+             (v-fun? (eval `{lam x 5})))
+  (test-equal? "simple add"
+               (eval `((lam x (+ x 1)) 41)) (v-num 42))
+  (test-equal? "nested functions"
+               (eval `(((lam x (lam y (+ x y))) 2) 3)) (v-num 5))
+  (test-raises-error? "applying non-function"
+                      (eval `(2 3)))
+  (test-raises-error? "lambda with non-symbol"
+                      (eval `(lam 2 (+ 2 3))))
+  (test-raises-error? "unbound variable"
+                      (eval `(+ x 2)))
+  (test-equal? "lambda shadows"
+               (eval `(((lam x (lam x x)) 2) 3)) (v-num 3))
+  (test-equal? "example 1"
+               (eval `((lam x (+ x 3)) 2)) (v-num 5))
+  (test-equal? "example 2"
+               (eval `((lam y 5) 1)) (v-num 5))
   
   )
 
