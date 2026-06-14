@@ -50,7 +50,17 @@
   (test-raises-error? "str= catches wrong right type"
                       (eval `(str= "abc" false)))
 
+  ;; If expression
+  (test-equal? "if works with true"
+               (eval `(if (num= 4 (+ 2 2)) 42 19)) (v-num 42))
+  (test-equal? "if works with false"
+               (eval `(if (num= 4 (+ 2 3)) 42 19)) (v-num 19))
+  (test-equal? "if true does not evaluate altern"
+               (eval `(if (num= 4 (+ 2 2)) 42 (num= "a" "b"))) (v-num 42))
+  (test-equal? "if false does not evaluate consq"
+               (eval `(if (num= 4 (+ 2 3)) (++ 2 3) 19)) (v-num 19))
 
+  
   )
 
 
