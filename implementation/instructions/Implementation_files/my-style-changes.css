@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400;1,600&display=swap');
+
+body { background-color: #240d20; /* #31112c; */
+       color: #fbdcc4; }
+
+body, .main,
+.refelem, .refcolumn, .refcontent, .content,
+.version
+/* .tocset, .tocview, .tocsub
+   -- removing these because though they should be there,
+      they make the text too wide, causing it to
+      move the body text over! */
+    { font-family: 'IBM Plex Serif', serif; }
+
+.tocview { background-color: #31112c; }
+.tocsub { background-color: #31112c; }
+
+.tocviewlink { color: #71654D; }
+.tocviewselflink { color: #71654D; }
+
+.plainlink { color: #7CAC96; }
+
+.refelem, .refcolumn, .refcontent {
+    background-color: #7d0633;
+    color: #fbdcc4;
+    border-color: #7d0633;
+    font-family: 'IBM Plex Serif';
+}
+
+.navsettop, .navsetbottom, .navleft, .navright {
+    display: none;
+    aria-hidden: true;
+}
+
+a:link, a:hover, a:active { color: #fae56e; } /* #f2a07b; } */
+a:visited { color: #fae56e; } /* #f2a07b; } */
+
+.StaffTable td { padding: 10px }
+
+blockquote { border-left: 3px solid pink; padding-left: 10px; }
+
+.RktBlk { background-color: pink; padding: 10px }
+
+.SSubSubSubSection { font-size: 150%; border-bottom: 2px solid orange; }
+
+h4 { font-size: 200%; }
+h5 { font-size: 125%; }
