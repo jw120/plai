@@ -1,0 +1,40 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html><head><meta http-equiv="content-type" content="text/html; charset=UTF-8"><meta name="viewport" content="width=device-width, initial-scale=0.8"><title>Mystery Languages</title><link rel="stylesheet" type="text/css" href="Mystery%20Languages_files/scribble.css" title="default"><link rel="stylesheet" type="text/css" href="Mystery%20Languages_files/scribble-style.css" title="default"><link rel="stylesheet" type="text/css" href="Mystery%20Languages_files/my-style-changes.css" title="default"><script type="text/javascript" src="Mystery%20Languages_files/scribble-common.js"></script><!--[if IE 6]><style type="text/css">.SIEHidden { overflow: hidden; }</style><![endif]--></head><body id="scribble-racket-lang-org"><div class="maincolumn"><div class="main"><div class="navsettop"><span class="navleft"><div class="nosearchform"></div>&nbsp;&nbsp;<span class="tocsettoggle">&nbsp;&nbsp;<a href="javascript:void(0);" title="show/hide table of contents" onclick="TocsetToggle();">contents</a></span></span><span class="navright">&nbsp;&nbsp;<a href="https://cs.brown.edu/courses/csci1730/2024/async.html" title="backward to &quot;5 Asynchronous Functions&quot;" data-pltdoc="x" rel="prev">← prev</a>&nbsp;&nbsp;<a href="https://cs.brown.edu/courses/csci1730/2024/assignments.html" title="up to &quot;Assignments&quot;" data-pltdoc="x">up</a>&nbsp;&nbsp;<a href="https://cs.brown.edu/courses/csci1730/2024/implementation.html" title="forward to &quot;Implementation&quot;" data-pltdoc="x" rel="next">next →</a></span>&nbsp;</div><h4 class="heading"><a name="(part._mystery)"></a>Mystery Languages<span class="button-group"><a href="#(part._mystery)" class="heading-anchor" title="Link to here">🔗</a><span style="visibility: hidden"> </span></span></h4><p><span class="SSubSubSubSection">What Is This Thread’s Purpose?</span></p><p>The
+<a href="https://cs.brown.edu/~sk/Publications/Papers/Published/pkf-teach-pl-exp-adv-think/"><span class="emph">Mystery
+Language</span></a> (ML) thread has you understand the design space of specific language
+features. In an ML assignment, you are given a new language feature’s syntax
+and a very loose description of it. The assignment will contain (say) three
+different languages that contain that new feature, each presented in terms of a
+black-box implementation of that language.</p><p>Each language will contain this new feature but will define it to behave in a
+somewhat different way. You will need to use the implementations to explore how
+the feature varies across the languages and try to pin down the differences
+precisely. You ultimately produce a <span class="emph">classifier</span>: a small set of programs
+that, collectively, tell the different implementations apart by producing
+different results under each implementation.</p><p><span class="SSubSubSubSection">Time</span></p><p>After two hours, come talk to the staff <span class="emph">and show them what you’ve tried
+so far</span>. Chances are your exploration attempts aren’t bearing fruit and you
+need redirection.</p><p><span class="SSubSubSubSection">Grading Standard</span></p><p>You need to classify most of the languages on most of the assignments. (This
+has not been a problem for students in the past.) You might not get all of
+them, but you need to get quite close.</p><p><span class="SSubSubSubSection">Software</span></p><p>The software is
+<a href="https://github.com/shriram/mystery-languages">on GitHub</a>.
+The README provides installation instructions.
+Please also watch the video linked to the README to get a sense of the
+mechanics.</p><p><span class="SSubSubSubSection">Tasks</span></p><p>For each language family, the documentation of available constructs is in the
+repository’s README. Note that the video shows you how to work with the
+variants of the <span class="stt">strings</span> language.</p><p></p><div class="SIntrapara">Here is the list of language families for the whole semester. Check the calendar
+for out- and in-dates:
+<span class="refelem"><span class="refcolumn"><span class="refcontent">The <span class="stt">arithmetic</span> language is a little tricky. Don’t get
+demoralized if you can’t figure it out entirely. Remember the grading policy!</span></span></span>
+</div><div class="SIntrapara"><ul><li><p><span class="stt">arithmetic</span></p></li><li><p><span class="stt">conditionals</span></p></li><li><p><span class="stt">fun-calls</span></p></li><li><p><span class="stt">mut-vars</span></p></li><li><p><span class="stt">mut-structs</span></p></li><li><p><span class="stt">fields</span></p></li><li><p><span class="stt">eval-order</span></p></li></ul></div><p></p><p>In the video, we end up with a small set of programs that can tell all the
+variants apart. This set is called a <span class="emph">classifier</span>.  For each of the
+language families above, your task is to produce a classifier that
+distinguishes the variants, akin to that in the video.</p><p>Observe that a given program in the classifier set may distinguish only one
+variant from all the others (just as in the video). When there are more than
+two variants, it is not always easy to produce a single program that can tell
+them all apart (i.e., produces a different answer in each variant); nor is it
+necessary. Sometimes a classifier is <span class="emph">much</span> clearer to a reader (like a
+grader!) if each program distinguishes just one variant; then it has a clear
+purpose.</p><p>Therefore, don’t try to get overly clever. You can if you want for your
+personal satisfaction, but that doesn’t mean you have to turn that in to us! Or
+if you do, try to also include simpler, less ambitious programs as well. A
+classifier does not have to be the <span class="emph">minimal</span> set necessary to tell apart
+the variants.</p><div class="navsetbottom"><span class="navleft"><div class="nosearchform"></div>&nbsp;&nbsp;<span class="tocsettoggle">&nbsp;&nbsp;<a href="javascript:void(0);" title="show/hide table of contents" onclick="TocsetToggle();">contents</a></span></span><span class="navright">&nbsp;&nbsp;<a href="https://cs.brown.edu/courses/csci1730/2024/async.html" title="backward to &quot;5 Asynchronous Functions&quot;" data-pltdoc="x" rel="prev">← prev</a>&nbsp;&nbsp;<a href="https://cs.brown.edu/courses/csci1730/2024/assignments.html" title="up to &quot;Assignments&quot;" data-pltdoc="x">up</a>&nbsp;&nbsp;<a href="https://cs.brown.edu/courses/csci1730/2024/implementation.html" title="forward to &quot;Implementation&quot;" data-pltdoc="x" rel="next">next →</a></span>&nbsp;</div></div></div><div id="contextindicator">&nbsp;</div></body></html>
